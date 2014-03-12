@@ -580,6 +580,7 @@
                            keyStroke="ENTER"/>
         <tns:actionMapping actionId="SeperatorAction"/>
         <tns:actionMapping actionId="GenerateWadlTestSuiteAction"/>
+        <tns:actionMapping actionId="GenerateMockServiceAction"/>
         <tns:actionMapping actionId="CreateWadlDocumentationAction"/>
         <tns:actionMapping actionId="SeperatorAction"/>
         <tns:actionMapping actionId="Wadl2JavaAction"/>

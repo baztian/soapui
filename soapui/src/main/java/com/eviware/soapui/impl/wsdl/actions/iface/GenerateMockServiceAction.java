@@ -12,16 +12,18 @@
 
 package com.eviware.soapui.impl.wsdl.actions.iface;
 
-import java.util.List;
-
 import com.eviware.soapui.SoapUI;
+import com.eviware.soapui.impl.rest.RestResource;
+import com.eviware.soapui.impl.rest.RestService;
+import com.eviware.soapui.impl.rest.mock.RestMockService;
+import com.eviware.soapui.impl.support.AbstractInterface;
 import com.eviware.soapui.impl.wsdl.WsdlInterface;
-import com.eviware.soapui.impl.wsdl.WsdlOperation;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
-import com.eviware.soapui.impl.wsdl.mock.WsdlMockOperation;
-import com.eviware.soapui.impl.wsdl.mock.WsdlMockService;
 import com.eviware.soapui.impl.wsdl.panels.mock.WsdlMockServiceDesktopPanel;
 import com.eviware.soapui.impl.wsdl.support.HelpUrls;
+import com.eviware.soapui.model.iface.Operation;
+import com.eviware.soapui.model.mock.MockOperation;
+import com.eviware.soapui.model.mock.MockService;
 import com.eviware.soapui.model.support.ModelSupport;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.UISupport;
@@ -33,13 +35,15 @@ import com.eviware.x.form.support.AField;
 import com.eviware.x.form.support.AField.AFieldType;
 import com.eviware.x.form.support.AForm;
 
+import java.util.List;
+
 /**
  * Generates a MockService for a specified Interface
  * 
  * @author ole.matzura
  */
 
-public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterface>
+public class GenerateMockServiceAction extends AbstractSoapUIAction<AbstractInterface>
 {
 	private static final String CREATE_MOCKSUITE_OPTION = "<create>";
 
@@ -48,12 +52,12 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 		super( "Generate MockService", "Generates a MockService containing all Operations in this Interface" );
 	}
 
-	public void perform( WsdlInterface iface, Object param )
+	public void perform( AbstractInterface iface, Object param )
 	{
 		generateMockService( iface, false );
 	}
 
-	public WsdlMockService generateMockService( WsdlInterface iface, boolean atCreation )
+	public void generateMockService( AbstractInterface iface, boolean atCreation )
 	{
 		XFormDialog dialog = ADialogBuilder.buildDialog( Form.class );
 		dialog.setBooleanValue( Form.ADD_ENDPOINT, true );
@@ -78,23 +82,18 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 			if( operations.size() == 0 )
 			{
 				UISupport.showErrorMessage( "No Operations selected.." );
-				return null;
+				return;
 			}
 
 			String mockServiceName = dialog.getValue( Form.MOCKSERVICE );
-			WsdlMockService mockService = project.getMockServiceByName( mockServiceName );
-
-			if( mockService == null || mockServiceName.equals( CREATE_MOCKSUITE_OPTION ) )
+			MockService mockService = getMockService( iface, project, mockServiceName );
+			if( mockService == null )
 			{
-				mockServiceName = UISupport.prompt( "Specify name of MockService to create", getName(), iface.getName()
-						+ " MockService" );
-				if( mockServiceName == null )
-					return null;
-
-				mockService = project.addNewMockService( mockServiceName );
+				return;
 			}
 
 			mockService.setPath( dialog.getValue( Form.PATH ) );
+
 			try
 			{
 				mockService.setPort( Integer.parseInt( dialog.getValue( Form.PORT ) ) );
@@ -105,13 +104,13 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 
 			for( int i = 0; i < iface.getOperationCount(); i++ )
 			{
-				WsdlOperation operation = iface.getOperationAt( i );
+				Operation operation = iface.getOperationAt( i );
 				if( !operations.contains( operation.getName() ) )
 					continue;
 
-				WsdlMockOperation mockOperation = mockService.addNewMockOperation( operation );
+				MockOperation mockOperation = mockService.addNewMockOperation( operation );
 				if( mockOperation != null )
-					mockOperation.addNewMockResponse( "Response 1", true );
+					mockOperation.addNewMockResponse( "Response 1" );
 			}
 
 			if( dialog.getBooleanValue( Form.ADD_ENDPOINT ) )
@@ -130,11 +129,42 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 					SoapUI.getDesktop().minimize( desktopPanel );
 				}
 			}
+		}
+	}
 
-			return mockService;
+	public MockService getMockService( AbstractInterface modelItem, WsdlProject project, String mockServiceName )
+	{
+		MockService mockService = getMockServiceByName( modelItem, project, mockServiceName );
+
+		if( mockService == null || mockServiceName.equals( CREATE_MOCKSUITE_OPTION ) )
+		{
+			mockServiceName = UISupport.prompt( "Specify name of MockService to create", getName(), modelItem.getName()
+					+ " MockService" );
+			if( mockServiceName != null )
+			{
+				mockService = addNewMockService( modelItem, project, mockServiceName );
+			}
 		}
 
-		return null;
+		return mockService;
+	}
+
+	public MockService addNewMockService( AbstractInterface modelItem, WsdlProject project, String mockServiceName )
+	{
+		if( modelItem instanceof RestService )
+		{
+			return project.addNewRestMockService( mockServiceName );
+		}
+		return project.addNewMockService( mockServiceName );
+	}
+
+	public MockService getMockServiceByName( AbstractInterface modelItem, WsdlProject project, String mockServiceName )
+	{
+		if( modelItem instanceof RestService )
+		{
+			return project.getRestMockServiceByName( mockServiceName );
+		}
+		return project.getMockServiceByName( mockServiceName );
 	}
 
 	@AForm( name = "Generate MockService", description = "Set options for generated MockOperations for this Interface", helpUrl = HelpUrls.GENERATE_MOCKSERVICE_HELP_URL, icon = UISupport.TOOL_ICON_PATH )
