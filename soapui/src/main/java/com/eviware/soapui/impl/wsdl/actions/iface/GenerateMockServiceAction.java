@@ -64,7 +64,7 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 
 		dialog.getFormField( Form.START_MOCKSERVICE ).setEnabled( !atCreation );
 
-		WsdlProject project = ( WsdlProject )iface.getProject();
+		WsdlProject project = iface.getProject();
 		String[] mockServices = ModelSupport.getNames( new String[] { CREATE_MOCKSUITE_OPTION },
 				project.getMockServiceList() );
 		dialog.setOptions( Form.MOCKSERVICE, mockServices );
@@ -82,7 +82,7 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 			}
 
 			String mockServiceName = dialog.getValue( Form.MOCKSERVICE );
-			WsdlMockService mockService = ( WsdlMockService )project.getMockServiceByName( mockServiceName );
+			WsdlMockService mockService = project.getMockServiceByName( mockServiceName );
 
 			if( mockService == null || mockServiceName.equals( CREATE_MOCKSUITE_OPTION ) )
 			{
@@ -91,7 +91,7 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 				if( mockServiceName == null )
 					return null;
 
-				mockService = ( WsdlMockService )project.addNewMockService( mockServiceName );
+				mockService = project.addNewMockService( mockServiceName );
 			}
 
 			mockService.setPath( dialog.getValue( Form.PATH ) );
@@ -105,11 +105,11 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 
 			for( int i = 0; i < iface.getOperationCount(); i++ )
 			{
-				WsdlOperation operation = ( WsdlOperation )iface.getOperationAt( i );
+				WsdlOperation operation = iface.getOperationAt( i );
 				if( !operations.contains( operation.getName() ) )
 					continue;
 
-				WsdlMockOperation mockOperation = ( WsdlMockOperation )mockService.addNewMockOperation( operation );
+				WsdlMockOperation mockOperation = mockService.addNewMockOperation( operation );
 				if( mockOperation != null )
 					mockOperation.addNewMockResponse( "Response 1", true );
 			}
