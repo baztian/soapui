@@ -50,7 +50,7 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterfac
 
 	public GenerateMockServiceAction()
 	{
-		super( "Generate MockService", "Generates a MockService containing all Operations in this Interface" );
+		super( "Generate SOAP Mock Service", "Generates a SOAP mock service containing all Operations in this Interface" );
 	}
 
 	public void perform( WsdlInterface iface, Object param )
