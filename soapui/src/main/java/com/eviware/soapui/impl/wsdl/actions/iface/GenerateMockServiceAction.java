@@ -21,6 +21,7 @@ import com.eviware.soapui.impl.wsdl.WsdlInterface;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.impl.wsdl.panels.mock.WsdlMockServiceDesktopPanel;
 import com.eviware.soapui.impl.wsdl.support.HelpUrls;
+import com.eviware.soapui.model.iface.Interface;
 import com.eviware.soapui.model.iface.Operation;
 import com.eviware.soapui.model.mock.MockOperation;
 import com.eviware.soapui.model.mock.MockService;
@@ -43,7 +44,7 @@ import java.util.List;
  * @author ole.matzura
  */
 
-public class GenerateMockServiceAction extends AbstractSoapUIAction<AbstractInterface>
+public class GenerateMockServiceAction extends AbstractSoapUIAction<WsdlInterface>
 {
 	private static final String CREATE_MOCKSUITE_OPTION = "<create>";
 
@@ -52,12 +53,12 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<AbstractInte
 		super( "Generate MockService", "Generates a MockService containing all Operations in this Interface" );
 	}
 
-	public void perform( AbstractInterface iface, Object param )
+	public void perform( WsdlInterface iface, Object param )
 	{
 		generateMockService( iface, false );
 	}
 
-	public void generateMockService( AbstractInterface iface, boolean atCreation )
+	public void generateMockService( WsdlInterface iface, boolean atCreation )
 	{
 		XFormDialog dialog = ADialogBuilder.buildDialog( Form.class );
 		dialog.setBooleanValue( Form.ADD_ENDPOINT, true );
@@ -134,7 +135,7 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<AbstractInte
 
 	public MockService getMockService( AbstractInterface modelItem, WsdlProject project, String mockServiceName )
 	{
-		MockService mockService = getMockServiceByName( modelItem, project, mockServiceName );
+		MockService mockService = project.getMockServiceByName( mockServiceName );
 
 		if( mockService == null || mockServiceName.equals( CREATE_MOCKSUITE_OPTION ) )
 		{
@@ -142,29 +143,11 @@ public class GenerateMockServiceAction extends AbstractSoapUIAction<AbstractInte
 					+ " MockService" );
 			if( mockServiceName != null )
 			{
-				mockService = addNewMockService( modelItem, project, mockServiceName );
+				mockService = project.addNewMockService( mockServiceName );
 			}
 		}
 
 		return mockService;
-	}
-
-	public MockService addNewMockService( AbstractInterface modelItem, WsdlProject project, String mockServiceName )
-	{
-		if( modelItem instanceof RestService )
-		{
-			return project.addNewRestMockService( mockServiceName );
-		}
-		return project.addNewMockService( mockServiceName );
-	}
-
-	public MockService getMockServiceByName( AbstractInterface modelItem, WsdlProject project, String mockServiceName )
-	{
-		if( modelItem instanceof RestService )
-		{
-			return project.getRestMockServiceByName( mockServiceName );
-		}
-		return project.getMockServiceByName( mockServiceName );
 	}
 
 	@AForm( name = "Generate MockService", description = "Set options for generated MockOperations for this Interface", helpUrl = HelpUrls.GENERATE_MOCKSERVICE_HELP_URL, icon = UISupport.TOOL_ICON_PATH )
